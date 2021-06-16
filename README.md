@@ -16,3 +16,7 @@ variables.py
     Choice of TOC
     Process IDs
     It also holds the dict to hold the unique code for each TOC.
+
+
+requirements.txt
+    Holds all the dependencies to install
