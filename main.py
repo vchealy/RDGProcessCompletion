@@ -6,17 +6,19 @@ Process Viewer
 '''
 
 import pandas as pd
+from sys import exit
 from os import remove
 from io import StringIO
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 
 from threading import Event
 from time import strftime
 from os import rename, system, path, mkdir
 from auth import my_user, my_path, hops_pass, url_HOPS, dummy
-from variables import HOPS_dict, TOC,  process_id
+from variables import HOPS_dict, TOC, id_list
 
 
 def main_function():
@@ -33,56 +35,72 @@ def main_function():
     # I like smaller windows, don't make it too small though
     driver.set_window_size(600, 700)
 
-    # 1 Loop over TOCs starts here
+    # Allows the Choice of TOC to be controlled outside the code
     for x in TOC:
         # 2 Create the url path here from the dict
         y = HOPS_dict[x]
         dumb_url = 'https://' + y + dummy
         driver.get(dumb_url)
-        
+
         # Use Authorisation module
         driver.find_element_by_name("username").send_keys(my_user)
         driver.find_element_by_name("password").send_keys(hops_pass)
         driver.find_element_by_name("submit").click()
         Event().wait(2)
 
-        # Enter AMS > Process Viewer in the search box
-        driver.find_element_by_link_text("AMS").click()
-        driver.find_element_by_link_text("Process Viewer").click()
-        Event().wait(2)
-        driver.find_element_by_id("ProcessSearch_processInstanceId").click()
-        driver.find_element_by_id("ProcessSearch_processInstanceId").clear()
-        driver.find_element_by_id(
-            "ProcessSearch_processInstanceId").send_keys(process_id)
-        driver.find_element_by_id("ProcessSearch_search").click()
-        Event().wait(2)
-        driver.find_element_by_link_text("Detail").click()
-        Event().wait(2)
+        # Process ID List Loop Starts Here
+        for process_x in id_list:
+            # Enter AMS > Process Viewer in the search box
+            driver.find_element_by_link_text("AMS").click()
+            driver.find_element_by_link_text("Process Viewer").click()
+            Event().wait(2)
+            driver.find_element_by_id(
+                "ProcessSearch_processInstanceId").click()
+            driver.find_element_by_id(
+                "ProcessSearch_processInstanceId").clear()
+            driver.find_element_by_id(
+                "ProcessSearch_processInstanceId").send_keys(process_x)
+            driver.find_element_by_id("ProcessSearch_search").click()
+            Event().wait(2)
 
-        # Pull the table from the page
-        dumbtable = str(y + today + 'dumbtable.csv')
-        tagged = driver.find_element_by_id('missingAcks').text
-        s = StringIO(tagged)
+            # Catch when the Process ID is not on that HOPS
+            try:
+                driver.find_element_by_link_text("Detail").click()
+            except NoSuchElementException:
+                print(f'There is no "Search Result" for Proess ID {process_x}')
+                # driver.quit()
+                # exit()
+            Event().wait(2)
 
-        # Write file Locally
-        with open(dumbtable, 'w') as f:
-            for item in s:
-                f.write(item)
+            # Pull the table from the page
+            dumbtable = str(y + today + 'dumbtable.csv')
 
-        # 7 Create datestamped folders
-        dir = path.join(my_path, the_day)
-        if not path.exists(dir):
-            mkdir(dir)
+            # Catch exception when there are no Pending ACKs
+            try:
+                tagged = driver.find_element_by_id('missingAcks').text
+                s = StringIO(tagged)
 
-    # 5 Manipulate the dataframe
-        df = pd.DataFrame(pd.read_csv(dumbtable))
-        df = df.iloc[1:]
+                # Write file Locally
+                with open(dumbtable, 'w') as f:
+                    for item in s:
+                        f.write(item)
 
-    # 6 Create date time stamped file
-        file_label = str(dir) + '/HOPS_' + \
-            x + '_' + today + '.csv'
-        df.to_csv(file_label, index=False, header=False)
-        remove(dumbtable)  # Removes Local file
+                # 7 Create datestamped folders
+                dir = path.join(my_path, the_day)
+                if not path.exists(dir):
+                    mkdir(dir)
+
+            # 5 Manipulate the dataframe
+                df = pd.DataFrame(pd.read_csv(dumbtable))
+                df = df.iloc[1:]
+
+            # 6 Create date time stamped file
+                file_label = str(dir) + '/HOPS_' + \
+                    x + '_' + today + '.csv'
+                df.to_csv(file_label, index=False, header=False)
+                remove(dumbtable)  # Removes Local file
+            except NoSuchElementException:
+                print(f'There are no "Pending ACKs" for Proess ID {process_x}')
 
     driver.quit()
 
