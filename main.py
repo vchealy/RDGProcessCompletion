@@ -1,7 +1,7 @@
 # main.py
 '''
 WebScrape HOPS Server
-Process Viewer
+Process ID Viewer
 
 '''
 
@@ -32,7 +32,7 @@ def main_function():
     options.add_argument('--ignore-certificate-errors')
 
     driver = webdriver.Chrome(options=options)  # Put your webdriver into PATH
-    # I like smaller windows, don't make it too small though
+    # I like smaller windows, ** Don't make it too small though
     driver.set_window_size(600, 700)
 
     # Allows the Choice of TOC to be controlled outside the code
@@ -68,8 +68,6 @@ def main_function():
                 driver.find_element_by_link_text("Detail").click()
             except NoSuchElementException:
                 print(f'There is no "Search Result" for Proess ID {process_x}')
-                # driver.quit()
-                # exit()
             Event().wait(2)
 
             # Pull the table from the page
@@ -99,6 +97,7 @@ def main_function():
                     x + '_' + today + '.csv'
                 df.to_csv(file_label, index=False, header=False)
                 remove(dumbtable)  # Removes Local file
+                print(f'Pending ACKs for {process_x} have be saved to {dir}')
             except NoSuchElementException:
                 print(f'There are no "Pending ACKs" for Proess ID {process_x}')
 
