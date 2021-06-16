@@ -17,7 +17,7 @@ from selenium.common.exceptions import NoSuchElementException
 from threading import Event
 from time import strftime
 from os import rename, system, path, mkdir
-from auth import my_user, my_path, hops_pass, url_HOPS, dummy
+from auth import my_user, my_path, hops_pass, dummy
 from variables import HOPS_dict, TOC, id_list
 
 
