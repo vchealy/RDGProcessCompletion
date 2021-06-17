@@ -108,11 +108,12 @@ def main_function():
                     x + '_' + process_x + '_' + today + '.csv'
                 df.to_csv(file_label, index=False, header=True)
                 remove(dumbtable)  # Removes Local file
-                print(f'Pending ACKs for {process_x} have be saved to {dir}')
+                print(f'Pending ACKs for {process_x} have been saved to {dir}')
                 # Update the time stamp to prevent overwrite
                 today = strftime("%Y_%m_%d-%H_%M_%S")
             except NoSuchElementException:
-                print(f'There are no "Pending ACKs" for Proess ID {process_x}')
+                print(
+                    f'There are no "Pending ACKs" for Process ID {process_x}')
                 no_acks_left.append(process_x)
                 # Update the time stamp to prevent overwrite
                 today = strftime("%Y_%m_%d-%H_%M_%S")
@@ -122,14 +123,15 @@ def main_function():
             mkdir(dir)
 
         no_acks_left_filename = path.join(
-            dir, ('No Pending Acks for ' + x + ' ' + today + '.txt'))
+            dir, ('ProcessIDs with No Pending Acks ' + x + ' ' + today + '.txt'))
         with open(no_acks_left_filename, 'w') as f:
             f.write(str(no_acks_left))
 
         no_searchs_filename = path.join(
-            dir, ('No ProcessIDs Found for ' + x + ' ' + today + '.txt'))
+            dir, ('ProcessIDs Not Found for ' + x + ' ' + today + '.txt'))
         with open(no_searchs_filename, 'w') as f:
             f.write(str(no_id_found))
+
     driver.quit()
 
 
