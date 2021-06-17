@@ -17,8 +17,8 @@ from selenium.common.exceptions import NoSuchElementException
 from threading import Event
 from time import strftime
 from os import rename, system, path, mkdir
-from auth import my_user, my_path, hops_pass, dummy
-from variables import HOPS_dict, TOC, id_list
+from auth import my_user, my_path, hops_pass, dummy, dummy_staging
+from variables import HOPS_Staging_dict, HOPS_dict, TOC, id_list
 
 
 def main_function():
@@ -37,10 +37,15 @@ def main_function():
 
     # Allows the Choice of TOC to be controlled outside the code
     for x in TOC:
-        # 2 Create the url path here from the dict
-        y = HOPS_dict[x]
-        dumb_url = 'https://' + y + dummy
+        # 2 Create the Staging url path here from the dict
+        y = HOPS_Staging_dict[x]
+        dumb_url = 'https://' + y + dummy_staging
         driver.get(dumb_url)
+
+        # 2 Create the Live url path here from the dict
+        # y = HOPS_dict[x]
+        # dumb_url = 'https://' + y + dummy
+        # driver.get(dumb_url)
 
         # Use Authorisation module
         driver.find_element_by_name("username").send_keys(my_user)
@@ -90,16 +95,20 @@ def main_function():
 
             # 5 Manipulate the dataframe
                 df = pd.DataFrame(pd.read_csv(dumbtable))
-                df = df.iloc[1:]
+                df = df.iloc[1:] # Removed the busted header row
+                df = df.iloc[:,0].str.split(expand=True) # Splits the text into three columns
+                df.columns=["ISAM ID", "Frame Source", "Frame FTS"]
 
             # 6 Create date time stamped file
                 file_label = str(dir) + '/HOPS_' + \
-                    x + '_' + today + '.csv'
-                df.to_csv(file_label, index=False, header=False)
+                    x + '_' + process_x + '_' + today + '.csv'
+                df.to_csv(file_label, index=False, header=True)
                 remove(dumbtable)  # Removes Local file
                 print(f'Pending ACKs for {process_x} have be saved to {dir}')
+                today = strftime("%Y_%m_%d-%H_%M_%S") # Update the time stamp to prevent overwrite
             except NoSuchElementException:
                 print(f'There are no "Pending ACKs" for Proess ID {process_x}')
+                today = strftime("%Y_%m_%d-%H_%M_%S") # Update the time stamp to prevent overwrite
 
     driver.quit()
 
