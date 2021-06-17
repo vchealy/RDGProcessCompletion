@@ -38,7 +38,7 @@ def main_function():
 
     # Allows the Choice of TOC to be controlled outside the code
     for x in TOC:
-        print(x)
+        print(f'Staging - {x}')
         # 2 Create the Staging url path here from the dict
         y = HOPS_Staging_dict[x]
         dumb_url = 'https://' + y + dummy_staging
@@ -96,6 +96,10 @@ def main_function():
                 if not path.exists(dir):
                     mkdir(dir)
 
+                dir = path.join(my_path, the_day,x)
+                if not path.exists(dir):
+                    mkdir(dir)
+
             # 5 Manipulate the dataframe
                 df = pd.DataFrame(pd.read_csv(dumbtable))
                 df = df.iloc[1:]  # Removed the busted header row
@@ -122,17 +126,19 @@ def main_function():
         if not path.exists(dir):
             mkdir(dir)
 
-        no_searchs_filename = path.join(
-            dir, ('ProcessIDs Not Found for ' + x + ' ' + today + '.txt'))
-        with open(no_searchs_filename, 'w') as f:
-            f.write(str(no_id_found))
+        if len(no_id_found) > 0:  # Where All Process ID are found file is not created
+            no_searchs_filename = path.join(
+                dir, ('ProcessIDs Not Found for ' + x + ' ' + today + '.txt'))
+            with open(no_searchs_filename, 'w') as f:
+                f.write(str(no_id_found))
 
         no_acks_left = list(set (no_acks_left) - set(no_id_found))
         
-        no_acks_left_filename = path.join(
-            dir, ('ProcessIDs with No Pending Acks ' + x + ' ' + today + '.txt'))
-        with open(no_acks_left_filename, 'w') as f:
-            f.write(str(no_acks_left))
+        if len(no_acks_left) > 0: # Where all ProcessIDs have Pending ACKs file not created 
+            no_acks_left_filename = path.join(
+                dir, ('ProcessIDs with No Pending Acks ' + x + ' ' + today + '.txt'))
+            with open(no_acks_left_filename, 'w') as f:
+                f.write(str(no_acks_left))
 
 
     driver.quit()
