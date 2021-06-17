@@ -122,15 +122,18 @@ def main_function():
         if not path.exists(dir):
             mkdir(dir)
 
+        no_searchs_filename = path.join(
+            dir, ('ProcessIDs Not Found for ' + x + ' ' + today + '.txt'))
+        with open(no_searchs_filename, 'w') as f:
+            f.write(str(no_id_found))
+
+        no_acks_left = list(set (no_acks_left) - set(no_id_found))
+        
         no_acks_left_filename = path.join(
             dir, ('ProcessIDs with No Pending Acks ' + x + ' ' + today + '.txt'))
         with open(no_acks_left_filename, 'w') as f:
             f.write(str(no_acks_left))
 
-        no_searchs_filename = path.join(
-            dir, ('ProcessIDs Not Found for ' + x + ' ' + today + '.txt'))
-        with open(no_searchs_filename, 'w') as f:
-            f.write(str(no_id_found))
 
     driver.quit()
 
