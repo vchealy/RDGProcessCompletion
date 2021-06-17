@@ -1,13 +1,12 @@
 # main.py
 '''
-WebScrape HOPS Server
+WebScrape HOPS Staging Server
 Process ID Viewer
 
 '''
 
 import pandas as pd
 from sys import exit
-from os import remove
 from io import StringIO
 
 from selenium import webdriver
@@ -16,7 +15,7 @@ from selenium.common.exceptions import NoSuchElementException
 
 from threading import Event
 from time import strftime
-from os import rename, system, path, mkdir
+from os import remove, system, path, mkdir
 from auth import my_user, my_path, hops_pass, dummy, dummy_staging
 from variables import HOPS_Staging_dict, HOPS_dict, TOC, id_list
 
@@ -25,6 +24,8 @@ def main_function():
     system('cls')  # Clear the Console for ease of viewing
     today = strftime("%Y_%m_%d-%H_%M_%S")  # Gives initial a date time stamp
     the_day = strftime('%Y_%m_%d')  # Give a date stamp
+    no_id_found = []
+    no_acks_left = []
 
     # Setup Chrome Browser
     options = webdriver.ChromeOptions()
@@ -37,6 +38,7 @@ def main_function():
 
     # Allows the Choice of TOC to be controlled outside the code
     for x in TOC:
+        print(x)
         # 2 Create the Staging url path here from the dict
         y = HOPS_Staging_dict[x]
         dumb_url = 'https://' + y + dummy_staging
@@ -73,6 +75,7 @@ def main_function():
                 driver.find_element_by_link_text("Detail").click()
             except NoSuchElementException:
                 print(f'There is no "Search Result" for Proess ID {process_x}')
+                no_id_found.append(process_x)
             Event().wait(2)
 
             # Pull the table from the page
@@ -95,9 +98,10 @@ def main_function():
 
             # 5 Manipulate the dataframe
                 df = pd.DataFrame(pd.read_csv(dumbtable))
-                df = df.iloc[1:] # Removed the busted header row
-                df = df.iloc[:,0].str.split(expand=True) # Splits the text into three columns
-                df.columns=["ISAM ID", "Frame Source", "Frame FTS"]
+                df = df.iloc[1:]  # Removed the busted header row
+                # Splits the text into three columns
+                df = df.iloc[:, 0].str.split(expand=True)
+                df.columns = ["ISAM ID", "Frame Source", "Frame FTS"]
 
             # 6 Create date time stamped file
                 file_label = str(dir) + '/HOPS_' + \
@@ -105,11 +109,27 @@ def main_function():
                 df.to_csv(file_label, index=False, header=True)
                 remove(dumbtable)  # Removes Local file
                 print(f'Pending ACKs for {process_x} have be saved to {dir}')
-                today = strftime("%Y_%m_%d-%H_%M_%S") # Update the time stamp to prevent overwrite
+                # Update the time stamp to prevent overwrite
+                today = strftime("%Y_%m_%d-%H_%M_%S")
             except NoSuchElementException:
                 print(f'There are no "Pending ACKs" for Proess ID {process_x}')
-                today = strftime("%Y_%m_%d-%H_%M_%S") # Update the time stamp to prevent overwrite
+                no_acks_left.append(process_x)
+                # Update the time stamp to prevent overwrite
+                today = strftime("%Y_%m_%d-%H_%M_%S")
 
+        dir = path.join(my_path, the_day)
+        if not path.exists(dir):
+            mkdir(dir)
+
+        no_acks_left_filename = path.join(
+            dir, ('No Pending Acks for ' + x + ' ' + today + '.txt'))
+        with open(no_acks_left_filename, 'w') as f:
+            f.write(str(no_acks_left))
+
+        no_searchs_filename = path.join(
+            dir, ('No ProcessIDs Found for ' + x + ' ' + today + '.txt'))
+        with open(no_searchs_filename, 'w') as f:
+            f.write(str(no_id_found))
     driver.quit()
 
 
