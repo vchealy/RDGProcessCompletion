@@ -4,8 +4,9 @@ HOPS Process Viewer
 Access each TOC HOPS and look at the process viewer for specific process ID.
 
 Allowing the user to know whether an ISAM has picked up and successfully processed the
-message or whether further action is required.
-main.py
+message or whether further action is required.  
+
+main.py  
     Edit the sections at line 40+ to determine which domain is requested
     Automation of the TOC that Process ID have been supplied for 
 
