@@ -8,7 +8,7 @@ message or whether further action is required.
 
 main.py  
     Edit the sections at line 40+ to determine which domain is requested
-    Automation of the TOC that Process ID have been supplied for 
+    Automation of the TOC Process IDs that have been supplied 
 
 Additional modules
 
