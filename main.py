@@ -17,7 +17,7 @@ from threading import Event
 from time import strftime
 from os import remove, system, path, mkdir
 from auth import my_user, my_path, hops_pass, dummy, dummy_staging
-from variables import HOPS_Staging_dict, HOPS_dict, TOC, id_list
+from variables import HOPS_Staging_dict, HOPS_dict, id_Staging_dict, TOC
 
 
 def main_function():
@@ -54,6 +54,9 @@ def main_function():
         driver.find_element_by_name("password").send_keys(hops_pass)
         driver.find_element_by_name("submit").click()
         Event().wait(2)
+
+        id_list = list(id_Staging_dict[x])
+        print(id_list)
 
         # Process ID List Loop Starts Here
         for process_x in id_list:
