@@ -55,6 +55,7 @@ def main_function():
         driver.find_element_by_name("submit").click()
         Event().wait(2)
 
+        # Select the correct List of Process IDs
         id_list = list(id_Staging_dict[x])
         print(id_list)
 
@@ -99,7 +100,7 @@ def main_function():
                 if not path.exists(dir):
                     mkdir(dir)
 
-                dir = path.join(my_path, the_day,x)
+                dir = path.join(my_path, the_day, x)
                 if not path.exists(dir):
                     mkdir(dir)
 
@@ -122,27 +123,30 @@ def main_function():
                 print(
                     f'There are no "Pending ACKs" for Process ID {process_x}')
                 no_acks_left.append(process_x)
+
                 # Update the time stamp to prevent overwrite
                 today = strftime("%Y_%m_%d-%H_%M_%S")
 
+        # Clean up Documents
+        # Create Folder if there were no Process IDs or ACKs still pending
         dir = path.join(my_path, the_day)
         if not path.exists(dir):
             mkdir(dir)
 
-        if len(no_id_found) > 0:  # Where All Process ID are found file is not created
+        if len(no_id_found) > 0:  # Where All 'Process ID are not found' file created
             no_searchs_filename = path.join(
                 dir, ('ProcessIDs Not Found for ' + x + ' ' + today + '.txt'))
             with open(no_searchs_filename, 'w') as f:
                 f.write(str(no_id_found))
 
-        no_acks_left = list(set (no_acks_left) - set(no_id_found))
-        
-        if len(no_acks_left) > 0: # Where all ProcessIDs have Pending ACKs file not created 
+        # Ensures no_id_found is not on no_acks_left list
+        no_acks_left = list(set(no_acks_left) - set(no_id_found))
+
+        if len(no_acks_left) > 0:  # Where all 'ProcessIDs have No Pending ACKs' file created
             no_acks_left_filename = path.join(
                 dir, ('ProcessIDs with No Pending Acks ' + x + ' ' + today + '.txt'))
             with open(no_acks_left_filename, 'w') as f:
                 f.write(str(no_acks_left))
-
 
     driver.quit()
 
