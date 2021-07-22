@@ -1,22 +1,18 @@
-# RDGHOPSProcess
+# Server Process Confirmation
 HOPS Process Viewer
 
-Access each TOC HOPS and look at the process viewer for specific process ID.
+Access each servers process viewer and check for specific process to have completed.
 
-Allowing the user to know whether an ISAM has picked up and successfully processed the
-message or whether further action is required.  
+**main.py**  
+There is a complete change and this has been removed.
+In its place is two scripts, one that is a quick check that the process is valid and second that scrapes and manages the full data.
 
-main.py  
-    Edit the sections at line 40+ to determine which domain is requested
-    Automation of the TOC Process IDs that have been supplied 
-
-Additional modules
-
-auth.py
+**Additional modules**  
+**auth.py**  
     This allows the user to add their authorisation information without affecting the main code
     This holds the url domains required
 
-variables.py
+**variables.py**  
     Gives the various customisations available to the user.
     Choice of Live or Test Domain
     Choice of TOC, choose all TOCs that Process ID have been supplied. Gives single run through all.
@@ -24,5 +20,5 @@ variables.py
     Holds the dict to the unique code for each TOC.
     Added a dixt for the Process ID for both domains
 
-requirements.txt
+**requirements.txt**  
     Holds all the dependencies to install

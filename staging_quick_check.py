@@ -1,8 +1,16 @@
-# main.py
+# staging_quick_check.py
 '''
-WebScrape HOPS Staging Server
-Process ID Viewer
+    WebScrape HOPS Staging Server
+    Process ID Viewer
 
+	Open the process viewer for specific process ID. (Take from a variables module)
+	
+	Confirming if an ISAM has picked up and successfully processed the message in the Process ID 
+    or whether further action is required. 
+	 - Unsucessful is when there is a Pending ACK remaining for an ISAM for the above Process ID 
+	
+	**main.py**  
+	    Automation of the TOC Process ID checks from the Process ID information supplied 
 '''
 
 import pandas as pd
@@ -10,14 +18,13 @@ from sys import exit
 from io import StringIO
 
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 
 from threading import Event
 from time import strftime
 from os import remove, system, path, mkdir
 from auth import my_user, my_path, hops_pass, dummy, dummy_staging
-from variables import HOPS_Staging_dict, HOPS_dict, id_Staging_dict, TOC
+from variables import HOPS_Staging_dict, id_Staging_dict, TOC
 
 
 def main_function():
@@ -26,6 +33,7 @@ def main_function():
     the_day = strftime('%Y_%m_%d')  # Give a date stamp
     no_id_found = []
     no_acks_left = []
+    pending_acks_there = []
 
     # Setup Chrome Browser
     options = webdriver.ChromeOptions()
@@ -43,12 +51,6 @@ def main_function():
         y = HOPS_Staging_dict[x]
         dumb_url = 'https://' + y + dummy_staging
         driver.get(dumb_url)
-
-        # 2 Create the Live url path here from the dict
-        # y = HOPS_dict[x]
-        # dumb_url = 'https://' + y + dummy
-        # driver.get(dumb_url)
-
         # Use Authorisation module
         driver.find_element_by_name("username").send_keys(my_user)
         driver.find_element_by_name("password").send_keys(hops_pass)
@@ -78,75 +80,53 @@ def main_function():
             try:
                 driver.find_element_by_link_text("Detail").click()
             except NoSuchElementException:
-                print(f'There is no "Search Result" for Proess ID {process_x}')
+                print(
+                    f'There is no "Search Result" for Process ID {process_x}')
                 no_id_found.append(process_x)
             Event().wait(2)
+            pending_acks_there.append(process_x)
 
-            # Pull the table from the page
-            dumbtable = str(y + today + 'dumbtable.csv')
-
+            # Page 1
             # Catch exception when there are no Pending ACKs
             try:
                 tagged = driver.find_element_by_id('missingAcks').text
-                s = StringIO(tagged)
-
-                # Write file Locally
-                with open(dumbtable, 'w') as f:
-                    for item in s:
-                        f.write(item)
 
                 # 7 Create datestamped folders
                 dir = path.join(my_path, the_day)
                 if not path.exists(dir):
                     mkdir(dir)
 
-                dir = path.join(my_path, the_day, x)
-                if not path.exists(dir):
-                    mkdir(dir)
-
-            # 5 Manipulate the dataframe
-                df = pd.DataFrame(pd.read_csv(dumbtable))
-                df = df.iloc[1:]  # Removed the busted header row
-                # Splits the text into three columns
-                df = df.iloc[:, 0].str.split(expand=True)
-                df.columns = ["ISAM ID", "Frame Source", "Frame FTS"]
-
-            # 6 Create date time stamped file
-                file_label = str(dir) + '/HOPS_' + \
-                    x + '_' + process_x + '_' + today + '.csv'
-                df.to_csv(file_label, index=False, header=True)
-                remove(dumbtable)  # Removes Local file
-                print(f'Pending ACKs for {process_x} have been saved to {dir}')
-                # Update the time stamp to prevent overwrite
-                today = strftime("%Y_%m_%d-%H_%M_%S")
             except NoSuchElementException:
                 print(
                     f'There are no "Pending ACKs" for Process ID {process_x}')
                 no_acks_left.append(process_x)
+                continue
+            # Create Folder if there were no Process IDs or ACKs still pending
+            dir = path.join(my_path, the_day)
+            if not path.exists(dir):
+                mkdir(dir)
 
-                # Update the time stamp to prevent overwrite
-                today = strftime("%Y_%m_%d-%H_%M_%S")
+            # For no Process ID
+            if len(no_id_found) > 0:  # Where All 'Process ID are not found' file created
+                no_searchs_filename = path.join(
+                    dir, ('ProcessIDs Not Found for ' + x + ' ' + today + '.txt'))
+                with open(no_searchs_filename, 'w') as f:
+                    f.write(str(no_id_found))
 
-        # Clean up Documents
-        # Create Folder if there were no Process IDs or ACKs still pending
-        dir = path.join(my_path, the_day)
-        if not path.exists(dir):
-            mkdir(dir)
+            # Ensures no_id_found is not on no_acks_left list
+            no_acks_left = list(set(no_acks_left) - set(no_id_found))
 
-        if len(no_id_found) > 0:  # Where All 'Process ID are not found' file created
-            no_searchs_filename = path.join(
-                dir, ('ProcessIDs Not Found for ' + x + ' ' + today + '.txt'))
-            with open(no_searchs_filename, 'w') as f:
-                f.write(str(no_id_found))
+            if len(no_acks_left) > 0:  # Where all 'ProcessIDs have No Pending ACKs' file created
+                no_acks_left_filename = path.join(
+                    dir, ('ProcessIDs with No Pending Acks ' + x + ' ' + today + '.txt'))
+                with open(no_acks_left_filename, 'w') as f:
+                    f.write(str(no_acks_left))
 
-        # Ensures no_id_found is not on no_acks_left list
-        no_acks_left = list(set(no_acks_left) - set(no_id_found))
-
-        if len(no_acks_left) > 0:  # Where all 'ProcessIDs have No Pending ACKs' file created
-            no_acks_left_filename = path.join(
-                dir, ('ProcessIDs with No Pending Acks ' + x + ' ' + today + '.txt'))
-            with open(no_acks_left_filename, 'w') as f:
-                f.write(str(no_acks_left))
+            if len(pending_acks_there) > 0:  # Where all 'ProcessIDs have No Pending ACKs' file created
+                pending_acks_there_filename = path.join(
+                    dir, ('ProcessIDs with Pending Acks ' + x + ' ' + today + '.txt'))
+                with open(pending_acks_there_filename, 'w') as f:
+                    f.write(str(pending_acks_there))
 
     driver.quit()
 
