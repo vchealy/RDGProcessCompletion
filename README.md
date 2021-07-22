@@ -4,8 +4,8 @@ HOPS Process Viewer
 Access each servers process viewer and check for specific process to have completed.
 
 **main.py**  
-    The main code with editable sections, this is improved in other code writes after this.  
-    But will remain as is for reference on where I initially wrote
+There is a complete change and this has been removed.
+In its place is two scripts, one that is a quick check that the process is valid and second that scrapes and manages the full data.
 
 **Additional modules**  
 **auth.py**  
