@@ -137,12 +137,11 @@ def controller(x):
             # Split string in columns
             df = pd.DataFrame(df[0].str.split(' ',2).tolist(),
                                 columns = ['ID','ORIGINATOR', 'NUMBER'])
-
-  # ******************************************************************
+            # Get Unique List
             df_names = {k: v for (k, v) in df.groupby('ID')}
             df_uniques = pd.DataFrame(df_names.items(), columns=['ID', 'ORIGINATOR'])
             df = df.append(df_uniques)
-  # ******************************************************************
+
             # Count the Unique ISAM Numbers
             no_of_isam = df['ID'].nunique()
             dfcount = pd.DataFrame({'ID':['Number of Unique ISAM'], 'ORIGINATOR': [no_of_isam]})
