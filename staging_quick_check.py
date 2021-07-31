@@ -3,14 +3,9 @@
     WebScrape HOPS Staging Server
     Process ID Viewer
 
-	Open the process viewer for specific process ID. (Take from a variables module)
+	Open the process viewer for specific process ID. (Taken from a variables module)
 	
-	Confirming if an ISAM has picked up and successfully processed the message in the Process ID 
-    or whether further action is required. 
-	 - Unsucessful is when there is a Pending ACK remaining for an ISAM for the above Process ID 
-	
-	**main.py**  
-	    Automation of the TOC Process ID checks from the Process ID information supplied 
+	Confirming that the process is on the server and that ISMS has completed auth 
 '''
 
 import pandas as pd

@@ -5,12 +5,7 @@
 
 	Open the process viewer for specific process ID. (Taken from a variables module)
 	
-	Confirming if an ISAM has picked up and successfully processed the message in the Process ID 
-    or whether further action is required. 
-	 - Unsuccessful is when there is a Pending ACK remaining for an ISAM for the above Process ID 
-	
-	**main.py**  
-	    Automation of the TOC Process ID checks from the Process ID information supplied 
+	Confirming that the process is on the server and that ISMS has completed auth
 '''
 
 import pandas as pd
@@ -102,7 +97,7 @@ def main_function():
                     f'There are no "Pending ACKs" for Process ID {process_x}')
                 no_acks_left.append(process_x)
                 continue
-            # Create Folder if there were no Process IDs or ACKs still pending
+            # Create Folder
             dir = path.join(my_path, the_day)
             if not path.exists(dir):
                 mkdir(dir)

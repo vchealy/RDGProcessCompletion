@@ -12,8 +12,7 @@
     Edit the variable.py file as required 
 
 
-    *** I have a unique number of ISAM - How to add a new row to the df with that information
-    *** How to list the unique ISAM numbers into a df and append to the main df
+    This lists all of the ISAM numbers with the associated Frame Number
 
 '''
 import pandas as pd
@@ -30,7 +29,7 @@ from auth import my_user, my_path, hops_pass, dummy
 from variables import TOC, HOPS_dict, id_Live_dict
 
 def main_function():
-    # This For loop broken out, as XLSX write was not completing for multiple TOCs
+    # This For loop is broken out, as XLSX write was not completing for multiple TOCs
     for x in TOC:
         controller(x)
     print('Task Complete.')
@@ -47,7 +46,7 @@ def controller(x):
     options.add_argument('--ignore-ssl-errors=yes')
     options.add_argument('--ignore-certificate-errors')
 
-    driver = webdriver.Chrome(options=options)  # Put your webdriver into PATH
+    driver = webdriver.Chrome(options=options)  # Make sure your webdriver is in PATH
     # I like smaller windows, ** Don't make it too small though
     driver.set_window_size(600, 700)
     print(f'Live - {x}')
@@ -131,17 +130,13 @@ def controller(x):
             df.reset_index(drop=True, inplace=True)
             df = df[1:] #take the data less the header row
  
-            # Remove Rows
+            # Remove Rows - This is to clean up the dataframe
             df = df[df[0] != 'ISAM']
             df = df[df[0] != 'Frame Source Frame FTS']
-            # Split string in columns
+            # Split string into columns
             df = pd.DataFrame(df[0].str.split(' ',2).tolist(),
                                 columns = ['ID','ORIGINATOR', 'NUMBER'])
-            # Get Unique List
-            df_names = {k: v for (k, v) in df.groupby('ID')}
-            df_uniques = pd.DataFrame(df_names.items(), columns=['ID', 'ORIGINATOR'])
-            df = df.append(df_uniques)
-
+ 
             # Count the Unique ISAM Numbers
             no_of_isam = df['ID'].nunique()
             dfcount = pd.DataFrame({'ID':['Number of Unique ISAM'], 'ORIGINATOR': [no_of_isam]})
