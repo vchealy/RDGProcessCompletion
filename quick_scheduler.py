@@ -6,11 +6,11 @@ from sys import exit
     This repeats the QuickCheck code that is looking to see if the ISMS auth has completed
 '''
 # import in the function/s I want to schedule
-from live_quick_check import main_function as qmf 
+from live_quick_check_isms_responses import main_function as qmf 
 
 # Choose the timer - First run will start after the initial timer has ran
 # Look to set another schedule if you need it to run it initially.
-schedule.every(15).minutes.do(qmf)
+schedule.every(2).minutes.do(qmf)
 
 while True:
     schedule.run_pending()
