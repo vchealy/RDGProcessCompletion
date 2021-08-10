@@ -74,7 +74,7 @@ def controller(x):
     print(process_id_list)
 
     # Get the complete table of Info for a Process ID
-    for process_x in process_list:
+    for process_x in process_id_list:
         print(process_x) # Console view to understand which  Process Id is being worked on
         try:
             #Get to the specific page
@@ -122,7 +122,7 @@ def controller(x):
         try:   
             df.reset_index(drop=True, inplace=True)
             df = df[1:] # Take the data less the header row
- 
+
             # Remove rows that are not required in the dataframe
             df = df[df[0] != 'ISAM']
             df = df[df[0] != 'Frame Source Frame FTS']
@@ -131,6 +131,7 @@ def controller(x):
                                 columns = ['Frames','ORIGINATOR', 'NUMBER'])
             df = df.loc[:,['Frames']] # Gives all the rows but only the Frames Column
             df = df['Frames'].value_counts() # Gives the ISAM Number and the count of entries of the ISAM Number
+            # print(df.plot())
             df.to_excel(writer, sheet_name= str(process_x)) # Write worksheet to the XLSX workbook
 
         except (UnboundLocalError, KeyError):
