@@ -1,4 +1,4 @@
-# live_full_list_per_processid.py
+# staging_isam_and_frame_count.py
 ''' 
     WebScrape HOPS Staging Server
     Process ID Viewer
@@ -11,9 +11,7 @@
 
     Edit the variable.py file as required 
 
-
-    This lists all of the ISAM numbers with the associated Frame Number
-
+    *** Adjust the df to show a count of the total frames, unique ISAM numbers
 '''
 import pandas as pd
 from io import StringIO
@@ -25,35 +23,44 @@ from selenium.common.exceptions import NoSuchElementException
 from threading import Event
 from time import strftime
 from os import system, path, mkdir
-from auth import my_user, my_path, hops_pass, dummy
-from variables import TOC, HOPS_dict, id_Live_dict
-from header import header, footer
+from auth import my_user, my_path, hops_pass, dummy_staging
+from variables import TOC, HOPS_Staging_dict, id_Staging_dict
+from logo import logo
+
+def header(x, process_x):
+    system('cls')
+    print(logo)
+    print(f'Live - {x}')
+    print(f'The current Process ID is {process_x}') 
 
 def main_function():
-    # This For loop is broken out, as XLSX write was not completing for multiple TOCs
+    # This For loop is broken out, as XLSX writer was not completing for multiple TOCs
     for x in TOC:
         controller(x)
-        footer()
+    system('cls')
+    print(logo)
+    print('Task Complete.')
 
 
 def controller(x):
-    today = strftime("%Y_%m_%d-%H_%M_%S")  # Gives initial a date time stamp
+    system('cls')  # Clear the Console for ease of viewing
+    today = strftime("%Y_%m_%d-%H_%M_%S")  # Gives an initial date time stamp
     the_day = strftime('%Y_%m_%d')  # Give a date stamp
     no_id_found = []
-    pending_acks_there = []
+    pending_acks = []
     # Setup Chrome Browser
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-ssl-errors=yes')
     options.add_argument('--ignore-certificate-errors')
 
-    driver = webdriver.Chrome(options=options)  # Make sure your webdriver is in PATH
-    # I like smaller windows, ** Don't make it too small though
-    driver.set_window_size(600, 700)
-    header(x, '-----')
+    driver = webdriver.Chrome(options=options)  # Put your webdriver into PATH
+    driver.set_window_size(600, 700) # I like smaller windows, ** Don't make it too small though
+    print(f'Staging - {x}')
 
-    # Create the Live url path here from the dict
-    y = HOPS_dict[x]
-    dumb_url = 'https://' + y + dummy
+    # Create the Staging url path here from the variables.py HOPS_Staging_dict
+    y = HOPS_Staging_dict[x]
+    dumb_url = 'https://' + y + dummy_staging
+    print(dumb_url)
     driver.get(dumb_url)
 
     # Use Authorisation module
@@ -67,16 +74,17 @@ def controller(x):
     if not path.exists(dir):
         mkdir(dir)
 
-    # Create an XLSX workbook per TOC
-    name_file = str(dir + '/' + x + '_' + today +'.xlsx')
+    # Create a XLSX workbook per TOC
+    name_file = str(dir + '/' + x + '_Staging_' + today +'.xlsx')
     writer = pd.ExcelWriter(name_file, engine='xlsxwriter')
 
-    # Loop through the ISAMs
-    # Choose the TOC ISAM list from the dict
-    process_list = list(id_Live_dict[x])
+    # Loop through the Process IDs
+    # Choose the TOC Process ID list from variables.py > id_Staging_dict
+    process_id_list = list(id_Staging_dict[x])
+    print(process_id_list)
 
-    # Get to the complete table of Info for an ISAM
-    for process_x in process_list:
+    # Get the complete table of Info for a Process ID
+    for process_x in process_id_list:
         header(x, process_x)
         try:
             #Get to the specific page
@@ -96,18 +104,15 @@ def controller(x):
             try:
                 driver.find_element_by_link_text("Detail").click()
             except NoSuchElementException:
-                # print(
-                #     f'There is no "Search Result" for Process ID {process_x}')
                 no_id_found.append(process_x)
-            Event().wait(2)
-            pending_acks_there.append(process_x)
-            
 
+            Event().wait(2)
+            pending_acks.append(process_x)
+            
             tagged = driver.find_element_by_id('missingAcks').text
             s = StringIO(tagged)
             df = pd.read_table(s, header= None)
-
-            # Loop over each other page for the ISAM
+            # Loop over each page for the Process ID
             next_page_btn = driver.find_element_by_xpath(("//*[text()='Next']"))
             while next_page_btn is not True:
                 driver.find_element_by_xpath(("//*[text()='Next']")).click()
@@ -119,34 +124,29 @@ def controller(x):
                 df2 = pd.read_table(s, header= None)
                 df = df.append(df2)
             else:
-                print("No pages") # In case there isn't a table for that ISAM
+                print("No pages") # In case there isn't a table for that Process ID
                 continue
         except NoSuchElementException:
-                    print(f'No More Pages') # Gives a clean break between ISAM
+                    print(f'No More Pages') # Gives a clean break between Process ID
 
         try:   
-            name = str(process_x)
             df.reset_index(drop=True, inplace=True)
-            df = df[1:] #take the data less the header row
- 
-            # Remove Rows - This is to clean up the dataframe
+            df = df[1:] # Take the data less the header row
+
+            # Remove rows that are not required in the dataframe
             df = df[df[0] != 'ISAM']
             df = df[df[0] != 'Frame Source Frame FTS']
             # Split string into columns
             df = pd.DataFrame(df[0].str.split(' ',2).tolist(),
-                                columns = ['ID','ORIGINATOR', 'NUMBER'])
- 
-            # Count the Unique ISAM Numbers
-            no_of_isam = df['ID'].nunique()
-            dfcount = pd.DataFrame({'ID':['Number of Unique ISAM'], 'ORIGINATOR': [no_of_isam]})
-            df = df.append(dfcount)
-
-            # print(f'Number of ISAM {no_of_isam}')
-            df.to_excel(writer, sheet_name= name) # Write Sheet to the Excel Workbook
+                                columns = ['Frames','ORIGINATOR', 'NUMBER'])
+            df = df.loc[:,['Frames']] # Gives all the rows but only the Frames Column
+            df = df['Frames'].value_counts() # Gives the ISAM Number and the count of entries of the ISAM Number
+            # print(df.plot())
+            df.to_excel(writer, sheet_name= str(process_x)) # Write worksheet to the XLSX workbook
 
         except (UnboundLocalError, KeyError):
             print('Not an ProcessID or No Information')
-            continue # Use this to pass an ISAM that fails to give informaion
+            continue # Use this to by-pass a Process ID that fails to give informaion
 
 
     writer.save()
